@@ -7,6 +7,25 @@ var fsr = require("fs");
 
 
 io.on("connection", function(socket) {
+  /*var code;
+  var users;
+
+  ss(socket).on("codeGeneration", function(numberOfusers){
+    code=Math.random(10000);
+    users=numberOfusers;
+  })
+
+  ss(socket).on("joinRequest", function(addr,inputCode){
+    if(inputCode==code)
+    {
+      fsr.appendFile('macs.txt', addr);
+    }
+    else {
+        ss(socket).emit("exit");
+    }
+  });*/
+
+
   ss(socket).on("login", function(addr){
   console.log(addr)
   fsr.stat('macs.txt', function(err,stat)
