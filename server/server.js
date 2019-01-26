@@ -54,28 +54,22 @@ io.on("connection", function (socket) {
   });
   console.log("connected");
   //CREATE NEW FILE
-  ss(socket).on("create_file", function (stream, data) {
-    console.log(data);
-    console.log(`creating new file with name ${data.name}`);
-    var filename = path.basename("files/"+data.name);
-    console.log("files/"+filename);
-    
-    stream.pipe(fs.createWriteStream(filename));
+  ss(socket).on("create_file", async function (stream, data) {
+    console.log(`creating new file with name ${"files/"+data.name}`);
+    var filename = "./files/"+data.name
+    console.log(filename);
+    await stream.pipe(fs.createWriteStream(filename));
   });
   //UPDATE EXISTING FILE
   ss(socket).on("update_file", function (stream, data) {
-    let filename = data.name;
-    console.log(data.name);
-
+    let filename = "./files/"+data.name;
     //remove old file
     console.log(`removing file at path ${filename}`);
 
     fs.remove(filename).then(
       () => {
         console.log(`updating file at path ${filename}`);
-        var newfile = path.basename("files/"+data.name);
-        console.log(newfile);
-        stream.pipe(fs.createWriteStream(newfile));
+        stream.pipe(fs.createWriteStream(filename));
       }
     )
       .catch(err => {
@@ -86,7 +80,7 @@ io.on("connection", function (socket) {
   //REMOVE FILE
   ss(socket).on("remove_file", function (data) {
     console.log(`removing new file with name ${data.name}`);
-    fs.remove("files/"+data.name)
+    fs.remove("./files/"+data.name)
       .catch(err => {
         console.error(err)
       })
@@ -111,10 +105,9 @@ watch.createMonitor(__dirname + "/files", function (monitor) {
 
       var stream = ss.createStream();
       console.log(`created event at location:${f}`);
-      var p = f.split("/");
-      var filename = p[p.length - 1];
+      var filename = path.basename(f)
       ss(socket).emit("create_file", stream, { name: filename });
-      var readStream = fs.createReadStream(filename)
+      var readStream = fs.createReadStream("files/"+filename)
       readStream.pipe(stream);
     })
   });
@@ -123,18 +116,16 @@ watch.createMonitor(__dirname + "/files", function (monitor) {
 
       var stream = ss.createStream();
       console.log(`changed event at location:${f}`);
-      var p = f.split("/");
-      var filename = p[p.length - 1];
+      var filename = path.basename(f)
       ss(socket).emit("update_file", stream, { name: filename });
-      var readStream = fs.createReadStream(filename)
+      var readStream = fs.createReadStream("files/"+filename)
       readStream.pipe(stream)
     })
   })
   monitor.on("removed", function (f, stat) {
     connected_sockets.forEach((socket) => {
       console.log(`removed event at location:${f}`);
-      var p = f.split("/");
-      var filename = p[p.length - 1];
+      var filename = path.basename(f)
       console.log(filename);
       ss(socket).emit("remove_file", { name: filename });
     })
