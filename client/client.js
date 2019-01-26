@@ -64,14 +64,7 @@ watch.createMonitor(__dirname + "/files", function (monitor) {
         readStream.pipe(stream);
     });
 
-    monitor.on("receive", function (f, stat) {
-        var stream = ss.createStream();
-        console.log(`created event at location:${f}`);
-        var p = f.split("/");
-        var filename = p[p.length - 1];
-        var readStream = fs.createReadStream("files/"+filename)
-        readStream.pipe(stream);
-    });
+
 
     monitor.on("changed", function (f, curr, prev) {
   

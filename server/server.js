@@ -57,16 +57,21 @@ io.on("connection", function (socket) {
   ss(socket).on("create_file", async function (stream, data) {
     
     console.log(`creating new file with name ${"files/" + data.name}`);
-    var filename = "files/"+data.name
+    var filename = data.name
     console.log(filename);
     await stream.pipe(fs.createWriteStream(filename));
-
+    
+    connected_sockets.forEach((connected_socket) => {
+      
+      if (connected_socket.id != socket.id) {
         console.log(connected_socket.id, socket.id);
 
         var stream = ss.createStream();
-        ss(connected_socket).broadcast.emit("receive", stream, { name: filename });
+        ss(connected_socket).emit("create_file", stream, { name: filename });
         var readStream = fs.createReadStream(filename)
         readStream.pipe(stream);
+      }
+    })
   });
   //UPDATE EXISTING FILE
   ss(socket).on("update_file", function (stream, data) {
