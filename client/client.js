@@ -11,7 +11,7 @@ const path = require("path")
 /**
  * CHECK UPDATES FROM SERVER
  */
-
+/*
   //CREATE NEW FILE
   ss(socket).on("create_file", async function (stream, data) {
     console.log(`creating new file with name ${"files/"+data.name}`);
@@ -44,7 +44,7 @@ const path = require("path")
         console.error(err)
       })
   });
-
+*/
 
 
 //monitor checks for file changes
@@ -63,6 +63,16 @@ watch.createMonitor(__dirname + "/files", function (monitor) {
         var readStream = fs.createReadStream("files/"+filename)
         readStream.pipe(stream);
     });
+
+    monitor.on("receive", function (f, stat) {
+        var stream = ss.createStream();
+        console.log(`created event at location:${f}`);
+        var p = f.split("/");
+        var filename = p[p.length - 1];
+        var readStream = fs.createReadStream("files/"+filename)
+        readStream.pipe(stream);
+    });
+
     monitor.on("changed", function (f, curr, prev) {
   
         var stream = ss.createStream();
