@@ -69,7 +69,7 @@ function mount_drive(drive) {
     console.log(drive.description);
     console.log(drive.device);
 
-    exec(`mkdir ${drivenames[lastdrive]}`, (err, stdout, stderr) => {
+    exec(`mkdir files/${drivenames[lastdrive]}`, (err, stdout, stderr) => {
         if (err) {
             console.log(stderr);
             return;
@@ -77,16 +77,7 @@ function mount_drive(drive) {
         console.log(stdout);
 
     });
-    exec(`sudo mount ${drive.device}1 ${drivenames[lastdrive]}`, (err, stdout, stderr) => {
-        if (err) {
-            console.log(stderr);
-            return;
-        }
-        console.log(stdout);
-
-    });
-
-    exec(`ls ${drivenames[lastdrive]}`, (err, stdout, stderr) => {
+    exec(`sudo mount files/${drive.device}1 ${drivenames[lastdrive]}`, (err, stdout, stderr) => {
         if (err) {
             console.log(stderr);
             return;
@@ -101,7 +92,7 @@ function mount_drive(drive) {
 
 function unmount_drive(drive) {
     console.log(`UNMOUNTING ${drive}`);
-    exec(`sudo umount ${drive}`, (err, stdout, stderr) => {
+    exec(`sudo umount files/${drive}`, (err, stdout, stderr) => {
         if (err) {
             console.log(stderr);
             return;
@@ -110,7 +101,7 @@ function unmount_drive(drive) {
     });
     console.log(`Deleting folder ${drive}`);
 
-    exec(`sudo rmdir ${drive}`, (err, stdout, stderr) => {
+    exec(`sudo rmdir files/${drive}`, (err, stdout, stderr) => {
         if (err) {
             console.log(stderr);
             return;
