@@ -10,48 +10,6 @@ const macaddress = require('node-macaddress');
 socket.on("print_hello", function(){console.log("hello");})
 
 
-/**
- * CHECK UPDATES FROM SERVER
- */
-
-  //CREATE NEW FILE
-  ss(socket).on("create_file", function (stream, data) {
-    console.log(data);
-    console.log(`creating new file with name ${data.name}`);
-    var filename = path.basename("files/"+data.name);
-    stream.pipe(fs.createWriteStream(filename));
-  });
-  //UPDATE EXISTING FILE
-  ss(socket).on("update_file", function (stream, data) {
-    let filename = data.name;
-    console.log(data.name);
-
-    //remove old file
-    console.log(`removing file at path ${filename}`);
-
-    fs.remove(filename).then(
-      () => {
-        console.log(`updating file at path ${filename}`);
-        var newfile = path.basename("files/"+data.name);
-        stream.pipe(fs.createWriteStream(newfile));
-      }
-    )
-      .catch(err => {
-        console.log("error!");
-        console.error(err)
-      })
-  });
-  //REMOVE FILE
-  ss(socket).on("remove_file", function (data) {
-    console.log(`removing new file with name ${data.name}`);
-    fs.remove("files/"+data.name)
-      .catch(err => {
-        console.error(err)
-      })
-  });
-
-
-
 //monitor checks for file changes
 watch.createMonitor(__dirname, function (monitor) {
    monitor.files[__dirname + "files"+'.zshrc'];
