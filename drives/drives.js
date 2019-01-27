@@ -4,7 +4,8 @@ var usbDetect = require('usb-detection');
 var drivelist = require('drivelist');
 const { exec } = require('child_process');
 const process = require("process");
-var drivenames = ["USB_A", "USB_B", "USB_C", "USB_E", "USB_F", "USB_G"];
+const p = __dirname+'/../server/files/';
+var drivenames= [p+"USB_A", p+"USB_B",p+ "USB_C",p+ "USB_E",p+ "USB_F", p+"USB_G"];
 
 var already_connected_devices = [];
 
@@ -64,12 +65,12 @@ process.on("exit", function () {
 
 var lastdrive = 0;
 
-function mount_drive(drive) {
+async function mount_drive(drive) {
     var driveloc = drive.device;
     console.log(drive.description);
     console.log(drive.device);
 
-    exec(`mkdir files/${drivenames[lastdrive]}`, (err, stdout, stderr) => {
+    exec(`mkdir ${drivenames[lastdrive]}`, (err, stdout, stderr) => {
         if (err) {
             console.log(stderr);
             return;
@@ -77,7 +78,8 @@ function mount_drive(drive) {
         console.log(stdout);
 
     });
-    exec(`sudo mount files/${drive.device}1 ${drivenames[lastdrive]}`, (err, stdout, stderr) => {
+//	await sleep(1000)   
+ exec(`sudo mount ${drive.device}1 ${drivenames[lastdrive]}`, (err, stdout, stderr) => {
         if (err) {
             console.log(stderr);
             return;
@@ -92,7 +94,7 @@ function mount_drive(drive) {
 
 function unmount_drive(drive) {
     console.log(`UNMOUNTING ${drive}`);
-    exec(`sudo umount files/${drive}`, (err, stdout, stderr) => {
+    exec(`sudo umount ${drive}`, (err, stdout, stderr) => {
         if (err) {
             console.log(stderr);
             return;
@@ -101,7 +103,7 @@ function unmount_drive(drive) {
     });
     console.log(`Deleting folder ${drive}`);
 
-    exec(`sudo rmdir files/${drive}`, (err, stdout, stderr) => {
+    exec(`sudo rmdir ${drive}`, (err, stdout, stderr) => {
         if (err) {
             console.log(stderr);
             return;
