@@ -86,7 +86,6 @@ function start_monitor() {
         console.log(`changed event at location:${f}`);
         var filename = path.basename(f);
         await sleep(_MS);
-
         if(path.extname(f)=="")//directory
         {
           /*
