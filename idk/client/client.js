@@ -15,16 +15,22 @@ start_monitor();
  */
 
 //CREATE NEW FILE
-socket.on("receive_new_file", function (data) {
+socket.on("receive_new_file", async function (data) {
+  await monitor.stop();
+
   console.log("data name in client is:" + data.name);
   var filename = data.name;
 
   ss(socket).emit("request_file", { name: filename })
+  await sleep(1000)
+  await start_monitor();
+
 });
 
 //UPDATE FILE
 ss(socket).on("new_file", async function (stream, filename) {
   await monitor.stop();
+
   console.log("new_file command arrived");
   
   await stream.pipe(fs.createWriteStream("files/" + filename));
