@@ -4,15 +4,42 @@ var path = require("path");
 var fs = require("fs-extra");
 var fsr = require("fs");
 const { exec } = require('child_process');
+const watch = require('watch');
 var connected_sockets = [];
 
 const _MS = 1000;
+create_server_monitor();
 
 
-const child = exec(`node ${__dirname+"/../drives/drives.js"}`)
-child.stdout.on('data', (data)=>{console.log(`drivers.js stdout>${data}`)})
-child.stderr.on('data', (data)=>{console.log(`drivers.js stderr>${data}`)})
+const child = exec(`node ${__dirname + "/../drives/drives.js"}`)
+child.stdout.on('data', (data) => { console.log(`drivers.js stdout>${data}`) })
+child.stderr.on('data', (data) => { console.log(`drivers.js stderr>${data}`) })
 
+
+async function create_server_monitor() {
+  watch.createMonitor(__dirname + "/files", function (monitor) {
+    monitor.files[__dirname + "/files" + '.zshrc'];
+    monitor.on("created", async function (f, stat) {
+      console.log("server found new file at : "+f);
+      
+      if (path.extname(f) == "") {//directory
+        console.log("substring gives: "+path.basename(f).substring(0, 3));
+        
+        if (path.basename(f).substring(0, 3) === "USB") {
+          io.emit("create_dir", "/files/"+path.basename(f))
+          await sleep(500);
+          fs.readdirSync(f).forEach(file => {
+            var fi = path.basename(f) + "/" + file
+            console.log(fi);
+            
+           io.emit("receive_new_file", {name:fi})
+            
+          })
+        }
+      }
+    });
+  });
+}
 
 io.on("connection", function (socket) {
 
@@ -28,6 +55,18 @@ io.on("connection", function (socket) {
   })
  
   ss(socket).on("joinRequest", function(addr,inputCode){
+    console.log(`UNMOUNTING ${drive}`);
+    exec(`sudo umount ${drive}`, (err, stdout, stderr) => {
+        if (err) {
+            console.log(stderr);
+            return;
+       
+    console.log(`UNMOUNTING ${drive}`);
+    exec(`sudo umount ${drive}`, (err, stdout, stderr) => {
+        if (err) {
+            console.log(stderr);
+            return;
+       
     if(inputCode==code)
     {
       fsr.appendFile('macs.txt', addr);
@@ -37,17 +76,17 @@ io.on("connection", function (socket) {
     }
   });*/
 
-  ss(socket).on("create_dir", async function (currentDir){
-    ss(socket).emit("create_dir",currentDir);
-    currentDir=__dirname+currentDir;
+  ss(socket).on("create_dir", async function (currentDir) {
+    ss(socket).emit("create_dir", currentDir);
+    currentDir = __dirname + currentDir;
     await exec(`mkdir -p ${currentDir}`);
     connected_sockets.forEach((s) => {
       async function f(so) {
         await sleep(_MS);
         console.log("SENT");
-        so.emit('create_dir', currentDir.replace(__dirname,""));
+        so.emit('create_dir', currentDir.replace(__dirname, ""));
       }
-        if (s.id != socket.id)
+      if (s.id != socket.id)
         f(s);
     });
   });
@@ -138,8 +177,8 @@ io.on("connection", function (socket) {
   ss(socket).on("remove_file", function (data) {
     var filename = data.name
     console.log(`removing new file with name ${data.name}`);
-    fs.remove("./files/" + data.name).then(
-      () => { io.emit('remove_file', { name: filename }) }
+    fs.remove(__dirname+"/files"+data.name).then(
+      () => { io.emit('remove_file', { name: data.name }) }
     )
       .catch(err => {
         console.error(err)

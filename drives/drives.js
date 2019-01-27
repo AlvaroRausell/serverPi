@@ -70,7 +70,7 @@ async function mount_drive(drive) {
     console.log(drive.description);
     console.log(drive.device);
 
-    exec(`mkdir ${drivenames[lastdrive]}`, (err, stdout, stderr) => {
+    await exec(`mkdir ${drivenames[lastdrive]}`, (err, stdout, stderr) => {
         if (err) {
             console.log(stderr);
             return;
@@ -79,7 +79,7 @@ async function mount_drive(drive) {
 
     });
 //	await sleep(1000)   
- exec(`sudo mount ${drive.device}1 ${drivenames[lastdrive]}`, (err, stdout, stderr) => {
+    await exec(`sudo mount ${drive.device}1 ${drivenames[lastdrive]}`, (err, stdout, stderr) => {
         if (err) {
             console.log(stderr);
             return;
@@ -89,6 +89,15 @@ async function mount_drive(drive) {
     });
 
     lastdrive++;
+
+    await exec(`sudo chmod ugo+wx ${drivenames[lastdrive]}`, (err, stdout, stderr) => {
+        if (err) {
+            console.log(stderr);
+            return;
+        }
+        console.log(stdout);
+
+    });
 
 }
 

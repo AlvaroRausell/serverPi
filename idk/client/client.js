@@ -2,12 +2,11 @@ const fs = require("fs-extra");
 const { exec } = require('child_process');
 const io = require("socket.io-client");
 const ss = require("socket.io-stream");
-const socket = io.connect("http://localhost:3000");
+const socket = io.connect("http://192.168.43.226:3000");
 const watch = require('watch');
 const os = require('os').networkInterfaces();
 const macaddress = require('node-macaddress');
 const path = require("path")
-
 var monitor = null;
 start_monitor();
 
@@ -36,7 +35,7 @@ ss(socket).on("new_file", async function (stream, filename) {
 //REMOVE FILE
 socket.on("remove_file", function (data) {
   console.log(`removing new file with name ${data.name}`);
-  fs.remove("./files/"+data.name)
+  fs.remove(__dirname+"/files"+data.name)
     .catch(err => {
       console.error(err)
     })
@@ -58,6 +57,7 @@ function start_monitor() {
         console.log(`created event at location:${f}`);
         var allDir = path.dirname(f);
         await exec(`mkdir -p ${allDir}`);
+        await sleep(1000);
         var filename = path.basename(f);
         if(path.extname(f)=="")//directory
         {
@@ -100,7 +100,7 @@ function start_monitor() {
         console.log(`removed event at location:${f}`);
         var filename = path.basename(f)
         console.log(filename);
-        ss(socket).emit("remove_file", { name: filename });
+        ss(socket).emit("remove_file", { name: f.replace(__dirname,"").replace("/files","") });
       })
     })
 
