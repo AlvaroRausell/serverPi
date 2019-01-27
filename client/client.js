@@ -2,7 +2,7 @@ const fs = require("fs-extra");
 const { exec } = require('child_process');
 const io = require("socket.io-client");
 const ss = require("socket.io-stream");
-const socket = io.connect("http://localhost:3000");
+const socket = io.connect("http://192.168.43.226:3000");
 const watch = require('watch');
 const os = require('os').networkInterfaces();
 const macaddress = require('node-macaddress');
@@ -137,11 +137,11 @@ var getmac = require("getmac");
 var socketio = require("socket.io");
 var app = express();
 var server = http.Server(app);
-server.listen(3001);
+server.listen(3005);
 const server2 = http.Server(app);
-server2.listen(3002);
+server2.listen(3006);
 var server3 = http.Server(app);
-server3.listen(3004);
+server3.listen(3007);
 const ioo = socketio(server);
 
 /*exports.default = function printWhatever(thingy) {
