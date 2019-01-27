@@ -2,7 +2,7 @@ const fs = require("fs-extra");
 const { exec } = require('child_process');
 const io = require("socket.io-client");
 const ss = require("socket.io-stream");
-const socket = io.connect("http://192.168.43.226:3000");
+const socket = io.connect("http://localhost:3000");
 const watch = require('watch');
 const os = require('os').networkInterfaces();
 const macaddress = require('node-macaddress');
@@ -127,3 +127,89 @@ function sleep(ms) {
     setTimeout(resolve, ms)
   })
 }
+
+//-----------------------------
+
+var wifi = require("node-wifi");
+var express = require("express");
+var http = require("http");
+var getmac = require("getmac");
+var socketio = require("socket.io");
+var app = express();
+var server = http.Server(app);
+server.listen(3001);
+const server2 = http.Server(app);
+server2.listen(3002);
+var server3 = http.Server(app);
+server3.listen(3004);
+const ioo = socketio(server);
+
+/*exports.default = function printWhatever(thingy) {
+ console.log("Hey", thingy);
+};
+
+*/
+const local = require("local-devices");
+
+//fs.readFile("mac.json", "utf8");
+
+const io2 = socketio(server2);
+io2.on("connection", socket => {
+ console.log("Whooo");
+ getIPByMac(mac, ip => {
+   console.log(ip);
+   if (ip !== -1) {
+     console.log(ip);
+     io2.emit("ip", ip);
+   } else {
+     io2.emit("ip", -1);
+   }
+ });
+});
+
+var json = require("./config.json");
+var mac = json.device.mac;
+
+var devices = [];
+async function getIPByMac(mac, cb) {
+ devices = await local();
+ console.log(devices);
+
+ for (var i = 0; i < devices.length; i++) {
+   var device = devices[i];
+
+   console.log(device.mac, "vs", mac);
+   if (device.mac === mac) {
+     return cb(device.ip);
+   }
+ }
+ return cb(-1);
+}
+//exports.default = getIPByMac;
+
+const io3 = socketio(server3);
+
+io3.on("connection", data => {
+ getmac.getMac((err, address) => io3.emit("mac", address));
+});
+ioo.on("connection", data => {
+ console.log("connected!");
+ wifi.init({
+   iface: null // network interface, choose a random wifi interface if set to null
+ });
+ wifi.scan(function(err, networks) {
+   if (err) {
+     ioo.emit("error", err);
+   } else {
+     console.log("networks!");
+     ioo.emit("networks", networks);
+   }
+ });
+ ioo.on("request", data => {
+   console.log("requested");
+   // Scan networks
+ });
+});
+
+// Initialize wifi module
+// Absolutely necessary even to set interface to null

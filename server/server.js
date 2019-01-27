@@ -90,7 +90,7 @@ io.on("connection", function (socket) {
         f(s);
     });
   });
-
+/*
   ss(socket).on("login", function (addr) {
     console.log(addr)
     fsr.stat('macs.txt', function (err, stat) {
@@ -115,7 +115,7 @@ io.on("connection", function (socket) {
     });
   });
 
-
+*/
   console.log("connected");
 
   ss(socket).on("request_file", async function (data) {
@@ -192,3 +192,32 @@ function sleep(ms) {
     setTimeout(resolve, ms)
   })
 }
+
+
+var express = require("express");
+var http = require("http");
+var socketio = require("socket.io");
+var app = express();
+var server = http.Server(app);
+server.listen(3016);
+const io45 = socketio(server);
+
+io45.on("connection", response => {
+ const mac = response.handshake.query.mac;
+ console.log(mac);
+ fs.readFile("./macs.txt", (err, data) => {
+   if (!err) {
+     if (data.indexOf(mac) >= 0) io45.emit("confirmation", true);
+   } else if (err.code === "ENOENT") {
+     fsr.writeFile("macs.txt", mac + "\n", function(err) {
+       if (err) {
+         return console.log(err);
+       }
+       getmac.getMac((err, address) => io45.emit("mac", address));
+       console.log("The file was saved!");
+     });
+   } else {
+     ss(socket).emit("confirmation", false);
+   }
+ });
+});
