@@ -49,7 +49,7 @@ socket.on("remove_file", function (data) {
 
 socket.on("create_dir", async function(currentDir){
   currentDir=__dirname+currentDir;
-  await exec(`mkdir -p ${currentDir}`);
+  await exec(`sudo mkdir -m 777 -p ${currentDir}`);
  });
 
 //monitor checks for file changes
@@ -62,7 +62,7 @@ function start_monitor() {
         var stream = ss.createStream();
         console.log(`created event at location:${f}`);
         var allDir = path.dirname(f);
-        await exec(`mkdir -p ${allDir}`);
+        await exec(`sudo mkdir -m 777 -p ${allDir}`);
         await sleep(_MS);
         var filename = path.basename(f);
         if(path.extname(f)=="")//directory
@@ -70,10 +70,10 @@ function start_monitor() {
           var currentDir = (allDir+"/"+filename).replace(__dirname,"");
           console.log("Directory: "+currentDir);
           ss(socket).emit("create_dir",currentDir);
-          await exec(`mkdir -p ${currentDir}`);
+          await exec(`sudo mkdir -m 777 -p ${currentDir}`);
         }
         else //file
-        {
+        { 
           ss(socket).emit("create_file", stream, { name: f.replace(__dirname, "").replace("/files","") });
           var readStream = fs.createReadStream(f);
           await readStream.pipe(stream);
