@@ -85,6 +85,7 @@ function start_monitor() {
         var stream = ss.createStream();
         console.log(`changed event at location:${f}`);
         var filename = path.basename(f);
+        await sleep(_MS);
 
         if(path.extname(f)=="")//directory
         {
@@ -99,6 +100,7 @@ function start_monitor() {
           ss(socket).emit("update_file", stream, { name: f.replace(__dirname, "").replace("/files","") });
           var readStream = fs.createReadStream(f);
           await readStream.pipe(stream);
+          
         }
       })
       
