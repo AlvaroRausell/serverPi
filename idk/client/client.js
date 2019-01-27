@@ -9,7 +9,7 @@ const macaddress = require('node-macaddress');
 const path = require("path")
 var monitor = null;
 start_monitor();
-
+const _MS = 2000;
 /**
  * CHECK UPDATES FROM SERVER
  */
@@ -22,7 +22,7 @@ socket.on("receive_new_file", async function (data) {
   var filename = data.name;
 
   ss(socket).emit("request_file", { name: filename })
-  await sleep(1000)
+  await sleep(_MS)
   await start_monitor();
 
 });
@@ -34,7 +34,7 @@ ss(socket).on("new_file", async function (stream, filename) {
   console.log("new_file command arrived");
   
   await stream.pipe(fs.createWriteStream("files/" + filename));
-  await sleep(1000);
+  await sleep(_MS);
   await start_monitor();
 })
 
@@ -63,7 +63,7 @@ function start_monitor() {
         console.log(`created event at location:${f}`);
         var allDir = path.dirname(f);
         await exec(`mkdir -p ${allDir}`);
-        await sleep(1000);
+        await sleep(_MS);
         var filename = path.basename(f);
         if(path.extname(f)=="")//directory
         {
