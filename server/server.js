@@ -3,13 +3,21 @@ var ss = require("socket.io-stream");
 var path = require("path");
 var fs = require("fs-extra");
 var fsr = require("fs");
+const { exec } = require('child_process');
 var connected_sockets = [];
 
 const _MS = 1000;
 
+
+const child = exec(`node ${__dirname+"/../drives/drives.js"}`)
+child.stdout.on('data', (data)=>{console.log(`drivers.js stdout>${data}`)})
+child.stderr.on('data', (data)=>{console.log(`drivers.js stderr>${data}`)})
+
+
 io.on("connection", function (socket) {
 
   connected_sockets.push(socket);
+
 
   /*var code;
   var users;
@@ -29,6 +37,20 @@ io.on("connection", function (socket) {
     }
   });*/
 
+  ss(socket).on("create_dir", async function (currentDir){
+    ss(socket).emit("create_dir",currentDir);
+    currentDir=__dirname+currentDir;
+    await exec(`mkdir -p ${currentDir}`);
+    connected_sockets.forEach((s) => {
+      async function f(so) {
+        await sleep(_MS);
+        console.log("SENT");
+        so.emit('create_dir', currentDir.replace(__dirname,""));
+      }
+        if (s.id != socket.id)
+        f(s);
+    });
+  });
 
   ss(socket).on("login", function (addr) {
     console.log(addr)
@@ -88,7 +110,7 @@ io.on("connection", function (socket) {
   //UPDATE EXISTING FILE
   ss(socket).on("update_file", async function (stream, data) {
     let filename = data.name;
-    //remove old file
+    //remove old filefiles/" + filename)
     console.log(`removing file at path ${filename}`);
 
     fs.remove(filename).then(

@@ -1,4 +1,5 @@
 const fs = require("fs-extra");
+const { exec } = require('child_process');
 const io = require("socket.io-client");
 const ss = require("socket.io-stream");
 const socket = io.connect("http://localhost:3000");
@@ -6,7 +7,6 @@ const watch = require('watch');
 const os = require('os').networkInterfaces();
 const macaddress = require('node-macaddress');
 const path = require("path")
-
 var monitor = null;
 start_monitor();
 
@@ -41,34 +41,59 @@ socket.on("remove_file", function (data) {
     })
 });
 
+socket.on("create_dir", async function(currentDir){
+  currentDir=__dirname+currentDir;
+  await exec(`mkdir -p ${currentDir}`);
+ });
 
 //monitor checks for file changes
 function start_monitor() {
   return new Promise(resolve => {
     watch.createMonitor(__dirname + "/files", function (m) {
       monitor = m;
-      console.log(__dirname);
-
       monitor.files[__dirname + "/files" + '.zshrc'];
-
       monitor.on("created", async function (f, stat) {
         var stream = ss.createStream();
         console.log(`created event at location:${f}`);
-        var p = f.split("/");
-        var filename = p[p.length - 1];
-        ss(socket).emit("create_file", stream, { name: filename });
-        var readStream = fs.createReadStream("files/" + filename)
-        await readStream.pipe(stream);
+        var allDir = path.dirname(f);
+        await exec(`mkdir -p ${allDir}`);
+        await sleep(1000);
+        var filename = path.basename(f);
+        if(path.extname(f)=="")//directory
+        {
+          var currentDir = (allDir+"/"+filename).replace(__dirname,"");
+          console.log("Directory: "+currentDir);
+          ss(socket).emit("create_dir",currentDir);
+          await exec(`mkdir -p ${currentDir}`);
+        }
+        else //file
+        {
+          ss(socket).emit("create_file", stream, { name: f.replace(__dirname, "").replace("/files","") });
+          var readStream = fs.createReadStream(f);
+          await readStream.pipe(stream);
+        }
       });
 
       monitor.on("changed",async function (f, curr, prev) {
 
         var stream = ss.createStream();
         console.log(`changed event at location:${f}`);
-        var filename = path.basename(f)
-        ss(socket).emit("update_file", stream, { name: filename });
-        var readStream = fs.createReadStream("files/"+filename)
-        await readStream.pipe(stream)
+        var filename = path.basename(f);
+
+        if(path.extname(f)=="")//directory
+        {
+          /*
+          var currentDir = (allDir+"/"+filename).replace(__dirname,"");
+          console.log("Directory: "+currentDir);
+          ss(socket).emit("create_dir",currentDir);
+          await exec(`mkdir -p ${currentDir}`);*/
+        }
+        else //file
+        {
+          ss(socket).emit("update_file", stream, { name: f.replace(__dirname, "").replace("/files","") });
+          var readStream = fs.createReadStream(f);
+          await readStream.pipe(stream);
+        }
       })
       
       monitor.on("removed", function (f, stat) {
